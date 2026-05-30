@@ -3,8 +3,8 @@ import Login from '../views/Login.vue'
 import Dashboard from '../views/Dashboard.vue'
 
 const routes = [
-  { path: '/',          component: Login },
-  { path: '/dashboard', component: Dashboard },
+  { path: '/login',          component: Login },
+  { path: '/', component: Dashboard },
 ]
 
 export default createRouter({
