@@ -1,3 +1,4 @@
+//ajouter
 <template>
   <div class="ajouter-container">
     <h2>Ajouter un produit</h2>
@@ -20,7 +21,7 @@ export default {
   },
   methods: {
     ajouter() {
-      // La personne BDD va connecter le PHP ici
+      // php sy BD
       console.log('Produit à ajouter:', this.nom, this.prix, this.quantite)
     }
   }
@@ -41,7 +42,7 @@ input {
 }
 button {
   padding: 10px;
-  background-color: #42b883;
+  background-color: #1B3162;
   color: white;
   border: none;
   border-radius: 5px;

@@ -39,7 +39,7 @@ input {
 }
 button {
   padding: 10px;
-  background-color: #42b883;
+  background-color: #1B3162;
   color: white;
   border: none;
   border-radius: 5px;
