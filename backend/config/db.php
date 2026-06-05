@@ -12,8 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Database connection
 $host = "localhost";
 $dbname = "vente_db";
-$user = "root";
-$pass = "";
+$user = "dev";
+$pass = "1234";
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
