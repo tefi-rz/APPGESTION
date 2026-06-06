@@ -5,7 +5,7 @@
 
       <div class="colonne-gauche">
         <button @click="section = 'ajouter'">Ajouter</button>
-        <button @click="section = 'crud'">MàJ</button>
+        <button @click="section = 'crud'">Liste</button>
         <button @click="section = 'bilan'">Bilan</button>
       </div>
 
