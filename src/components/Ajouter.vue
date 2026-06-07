@@ -1,4 +1,3 @@
-//ajouter
 <template>
   <div class="ajouter-container">
     <h2>Ajouter un produit</h2>
@@ -21,14 +20,42 @@ export default {
   },
   methods: {
     ajouter() {
-      // php sy BD
-      console.log('Produit à ajouter:', this.nom, this.prix, this.quantite)
+      // Validation
+      if (!this.nom || !this.prix || !this.quantite) {
+        alert('Veuillez remplir tous les champs')
+        return
+      }
+
+      fetch('http://localhost/APPGESTION/backend/ajouter.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          design: this.nom,
+          prix: parseFloat(this.prix),
+          quantite: parseInt(this.quantite)
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Produit ajouté !')
+          this.nom = ''
+          this.prix = ''
+          this.quantite = ''
+        } else {
+          alert('Erreur : ' + data.message)
+        }
+      })
+      .catch(error => {
+        alert('Impossible de contacter le serveur')
+        console.error(error)
+      })
     }
   }
 }
 </script>
 
-<style>
+<style scoped>
 .ajouter-container {
   display: flex;
   flex-direction: column;
