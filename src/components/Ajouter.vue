@@ -20,14 +20,42 @@ export default {
   },
   methods: {
     ajouter() {
-      // La personne BDD va connecter le PHP ici
-      console.log('Produit à ajouter:', this.nom, this.prix, this.quantite)
+      // Validation
+      if (!this.nom || !this.prix || !this.quantite) {
+        alert('Veuillez remplir tous les champs')
+        return
+      }
+
+      fetch('http://localhost/APPGESTION/backend/ajouter.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          design: this.nom,
+          prix: parseFloat(this.prix),
+          quantite: parseInt(this.quantite)
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Produit ajouté !')
+          this.nom = ''
+          this.prix = ''
+          this.quantite = ''
+        } else {
+          alert('Erreur : ' + data.message)
+        }
+      })
+      .catch(error => {
+        alert('Impossible de contacter le serveur')
+        console.error(error)
+      })
     }
   }
 }
 </script>
 
-<style>
+<style scoped>
 .ajouter-container {
   display: flex;
   flex-direction: column;
@@ -41,7 +69,7 @@ input {
 }
 button {
   padding: 10px;
-  background-color: #42b883;
+  background-color: #1B3162;
   color: white;
   border: none;
   border-radius: 5px;
