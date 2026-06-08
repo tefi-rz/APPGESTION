@@ -1,190 +1,144 @@
-//diagramme
 <template>
   <div class="bilan-container">
-    <h2>BILAN & VISUALISATION</h2>
-    <div class="cartes">
+    <h2 class="titre">BILAN &amp; VISUALISATION</h2>
+
+    <!-- Cartes stats -->
+    <div class="stats">
       <div class="carte">
-        <p class="titre-carte">MONTANT TOTAL</p>
-        <p class="valeur total">{{ totalGeneral }} Ar</p>
+        <span class="label">MONTANT TOTAL (Σ)</span>
+        <p class="valeur total">{{ formatMontant(stats.totalMontant) }}</p>
       </div>
       <div class="carte">
-        <p class="titre-carte">MONTANT MINIMAL</p>
-        <p class="valeur minimal">{{ produitMin.montant }} Ar</p>
-        <p class="nom-produit">{{ produitMin.nom }}</p>
+        <span class="label">MONTANT MINIMAL</span>
+        <p class="valeur minimal">{{ formatMontant(stats.minMontant) }}</p>
       </div>
       <div class="carte">
-        <p class="titre-carte">MONTANT MAXIMAL</p>
-        <p class="valeur maximal">{{ produitMax.montant }} Ar</p>
-        <p class="nom-produit">{{ produitMax.nom }}</p>
+        <span class="label">MONTANT MAXIMAL</span>
+        <p class="valeur maximal">{{ formatMontant(stats.maxMontant) }}</p>
       </div>
     </div>
-    <div class="graphique">
-      <p class="titre-graphique">CAMEMBERT — RÉPARTITION</p>
-      <div class="camembert-wrapper">
-        <Doughnut
-          :data="dataCamembert"
-          :options="optionsGraph"
-          :width="250"
-          :height="250"
-        />
+
+    <!-- Graphique camembert uniquement -->
+    <div class="graphiques">
+      <div class="graph-carte">
+        <h3>CAMEMBERT — RÉPARTITION</h3>
+        <canvas ref="pieRef"></canvas>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { Doughnut } from 'vue-chartjs'
-import {
-  Chart as ChartJS,
-  Title, Tooltip, Legend,
-  ArcElement
-} from 'chart.js'
-ChartJS.register(Title, Tooltip, Legend, ArcElement)
+import axios from "axios";
+import Chart from "chart.js/auto";
 
 export default {
   name: 'Bilan',
-  components: { Doughnut },
   data() {
     return {
-      data() {
-  return {
-    produits: [],   // ← vide
-    optionsGraph: {
-      responsive: false,
-      width: 250,
-      height: 250,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: '#1B3162',
-            font: { size: 10 }
-          }
-        }
-      }
-    }
-  }
-},
+      stats: {},
+      produits: []
+    };
+  },
+  mounted() {
+    axios.get("http://localhost/backend/bilan.php")
+      .then(res => {
+        this.stats    = res.data.stats;
+        this.produits = res.data.produits;
+        this.renderCharts();
+      })
+      .catch(err => console.error("Erreur chargement bilan:", err));
+  },
+  methods: {
+    formatMontant(val) {
+      if (!val) return "0.00 AR";
+      return parseFloat(val).toFixed(2) + " AR";
+    },
+    renderCharts() {
+      const labels = this.produits.map(p => p.produit);
+      const data   = this.produits.map(p => p.totalMontant);
+      const colors = ["#7B6CF6", "#5B8DEF", "#4ADE80", "#FACC15", "#F87171"];
 
-// PHP 
-async mounted() {
-  const response = await fetch('http://localhost/api/produits.php')
-  this.produits = await response.json()
-},
-      optionsGraph: {
-        responsive: false,
-        width: 250,
-        height: 250,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              color: '#1B3162',
-              font: { size: 10 }
+      // Camembert uniquement ✅
+      new Chart(this.$refs.pieRef, {
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: colors,
+            hoverOffset: 10
+          }]
+        },
+        options: {
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: "#ccc", padding: 16 }
             }
           }
         }
-      }
-    }
-  },
-  computed: {
-    montants() {
-      return this.produits.map(p => ({
-        nom: p.nom,
-        montant: p.prix * p.quantite
-      }))
-    },
-    totalGeneral() {
-      return this.montants.reduce((total, p) => total + p.montant, 0)
-    },
-    produitMax() {
-      if (this.montants.length === 0) return { nom: '-', montant: 0 }
-      return this.montants.reduce((max, p) =>
-        p.montant > max.montant ? p : max
-      )
-    },
-    produitMin() {
-      if (this.montants.length === 0) return { nom: '-', montant: 0 }
-      return this.montants.reduce((min, p) =>
-        p.montant < min.montant ? p : min
-      )
-    },
-    dataCamembert() {
-      return {
-        labels: this.montants.map(p => p.nom),
-        datasets: [{
-          data: this.montants.map(p => p.montant),
-          backgroundColor: [
-            '#1B3162',
-            '#00BCD4',
-            '#42b883',
-            '#e74c3c',
-            '#f1c40f'
-          ],
-          borderWidth: 0
-        }]
-      }
+      });
     }
   }
-}
+};
 </script>
 
-<style>
+<style scoped>
 .bilan-container {
-  width: 100%;
+  background-color: #0f1117;
+  min-height: 100vh;
+  padding: 30px;
+  font-family: 'Courier New', monospace;
+  color: #ccc;
 }
-h2 {
-  color: #1B3162;
-  font-size: 13px;
-  letter-spacing: 2px;
-  margin-bottom: 10px;
+.titre {
+  color: #7B6CF6;
+  letter-spacing: 3px;
+  font-size: 14px;
+  margin-bottom: 24px;
 }
-.cartes {
+.stats {
   display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 20px;
+  margin-bottom: 28px;
 }
 .carte {
   flex: 1;
-  padding: 5px;
-  background-color: #2c3e50;
-  color: white;
-  border-radius: 8px;
-  text-align: center;
+  background: #1a1d27;
+  border: 1px solid #2a2d3a;
+  border-radius: 12px;
+  padding: 24px;
 }
-.titre-carte {
-  font-size: 10px;
-  color: white;
-  letter-spacing: 1px;
-  margin-bottom: 5px;
+.label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #888;
 }
 .valeur {
-  font-size: 13px;
+  font-size: 28px;
   font-weight: bold;
-}
-.total   { color: white; }
-.minimal { color: white; }
-.maximal { color: white; }
-.nom-produit {
-  font-size: 10px;
-  color: white;
-  margin-top: 3px;
-}
-.graphique {
-  border: 2px solid #00BCD4;
-  border-radius: 15px;
-  padding: 10px;
-}
-.titre-graphique {
-  color: #1B3162;
-  font-size: 11px;
+  margin-top: 10px;
   letter-spacing: 1px;
-  margin-bottom: 8px;
-  font-weight: bold;
 }
-.camembert-wrapper {
-  width: 250px;
-  height: 250px;
-  margin: 0 auto;
+.total   { color: #5B8DEF; }
+.minimal { color: #4ADE80; }
+.maximal { color: #FACC15; }
+.graphiques {
+  display: flex;
+  gap: 20px;
+}
+.graph-carte {
+  flex: 1;
+  background: #1a1d27;
+  border: 1px solid #2a2d3a;
+  border-radius: 12px;
+  padding: 24px;
+}
+.graph-carte h3 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #888;
+  margin-bottom: 20px;
 }
 </style>
