@@ -26,7 +26,7 @@ export default {
         return
       }
 
-      fetch('http://localhost/APPGESTION/backend/ajouter.php', {
+      fetch('http://localhost/backend/ajouter.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
