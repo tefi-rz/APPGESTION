@@ -9,12 +9,23 @@
         <p class="valeur total">{{ formatMontant(stats.totalMontant) }}</p>
       </div>
       <div class="carte">
+<<<<<<< Updated upstream
         <span class="label">MONTANT MINIMAL</span>
         <p class="valeur minimal">{{ formatMontant(stats.minMontant) }}</p>
       </div>
       <div class="carte">
         <span class="label">MONTANT MAXIMAL</span>
         <p class="valeur maximal">{{ formatMontant(stats.maxMontant) }}</p>
+=======
+        <p class="titre-carte">MONTANT MINIMAL</p>
+        <p class="valeur minimal">{{ produitMin.montant }} Ar</p>
+        <p class="nom-produit">{{ produitMin.design }}</p>
+      </div>
+      <div class="carte">
+        <p class="titre-carte">MONTANT MAXIMAL</p>
+        <p class="valeur maximal">{{ produitMax.montant }} Ar</p>
+        <p class="nom-produit">{{ produitMax.design }}</p>
+>>>>>>> Stashed changes
       </div>
     </div>
 
@@ -36,6 +47,7 @@ export default {
   name: 'Bilan',
   data() {
     return {
+<<<<<<< Updated upstream
       stats: {},
       produits: []
     };
@@ -79,12 +91,78 @@ export default {
           }
         }
       });
+=======
+      produits: [],
+      optionsGraph: {
+        responsive: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#1B3162',
+              font: { size: 10 }
+            }
+          }
+        }
+      }
+    }
+  },
+  async mounted() {
+    try {
+      const response = await fetch('http://localhost/backend/crud.php')
+      const data = await response.json()
+      if (data.success) {
+        this.produits = data.data
+      }
+    } catch (e) {
+      console.error('Erreur chargement produits:', e)
+    }
+  },
+  computed: {
+    montants() {
+      return this.produits.map(p => ({
+        design: p.design,
+        montant: p.prix * p.quantite
+      }))
+    },
+    totalGeneral() {
+      return this.montants.reduce((total, p) => total + p.montant, 0)
+    },
+    produitMax() {
+      if (this.montants.length === 0) return { design: '-', montant: 0 }
+      return this.montants.reduce((max, p) =>
+        p.montant > max.montant ? p : max
+      )
+    },
+    produitMin() {
+      if (this.montants.length === 0) return { design: '-', montant: 0 }
+      return this.montants.reduce((min, p) =>
+        p.montant < min.montant ? p : min
+      )
+    },
+    dataCamembert() {
+      return {
+        labels: this.montants.map(p => p.design),
+        datasets: [{
+          data: this.montants.map(p => p.montant),
+          backgroundColor: [
+            '#1B3162',
+            '#00BCD4',
+            '#42b883',
+            '#e74c3c',
+            '#f1c40f'
+          ],
+          borderWidth: 0
+        }]
+      }
+>>>>>>> Stashed changes
     }
   }
 };
 </script>
 
 <style scoped>
+<<<<<<< Updated upstream
 .bilan-container {
   background-color: #0f1117;
   min-height: 100vh;
@@ -97,6 +175,14 @@ export default {
   letter-spacing: 3px;
   font-size: 14px;
   margin-bottom: 24px;
+=======
+.bilan-container { width: 100%; }
+h2 {
+  color: #1B3162;
+  font-size: 13px;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+>>>>>>> Stashed changes
 }
 .stats {
   display: flex;
@@ -118,7 +204,25 @@ export default {
 .valeur {
   font-size: 28px;
   font-weight: bold;
+<<<<<<< Updated upstream
   margin-top: 10px;
+=======
+}
+.total, .minimal, .maximal { color: white; }
+.nom-produit {
+  font-size: 10px;
+  color: white;
+  margin-top: 3px;
+}
+.graphique {
+  border: 2px solid #00BCD4;
+  border-radius: 15px;
+  padding: 10px;
+}
+.titre-graphique {
+  color: #1B3162;
+  font-size: 11px;
+>>>>>>> Stashed changes
   letter-spacing: 1px;
 }
 .total   { color: #5B8DEF; }

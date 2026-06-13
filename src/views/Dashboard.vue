@@ -57,9 +57,6 @@ export default {
   flex-direction: column;
   gap: 20px;
   padding: 10px;       
-  border: 2px solid #1B3162;
-  border-radius: 15px;
-  min-height: 470px;
 }
 
 .colonne-gauche button {

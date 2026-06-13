@@ -20,15 +20,25 @@
         </tr>
       </thead>
       <tbody>
+<<<<<<< Updated upstream
         <tr v-for="produit in produits" :key="produit.numProduit">
           <td>{{ produit.numProduit }}</td>
+=======
+        <tr v-for="(produit, index) in produits" :key="produit.numProduit">
+          <td>{{ index + 1 }}</td>
+>>>>>>> Stashed changes
           <td>{{ produit.design }}</td>
           <td>{{ produit.prix }}</td>
           <td>{{ produit.quantite }}</td>
           <td>{{ produit.montant }}</td>
           <td>
+<<<<<<< Updated upstream
             <button class="btn-edit" @click="openEdit(produit)">Modifier</button>
             <button class="btn-delete" @click="supprimer(produit.numProduit)">Supprimer</button>
+=======
+            <button class="btn-modifier" @click="modifier(produit)">⚙️</button>
+            <button class="btn-supprimer" @click="supprimer(produit.numProduit)">🗑️</button>
+>>>>>>> Stashed changes
           </td>
         </tr>
       </tbody>
@@ -65,6 +75,7 @@
   </div>
 </template>
 
+<<<<<<< Updated upstream
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 
@@ -90,6 +101,55 @@ function validateDesign() {
     editErrors.design = "Le design est obligatoire"
   } else {
     editErrors.design = ''
+=======
+<script>
+export default {
+  name: 'Crud',
+  data() {
+    return {
+      produits: []
+    }
+  },
+  async mounted() {
+    try {
+      const response = await fetch('http://localhost/backend/crud.php')
+      const data = await response.json()
+      if (data.success) {
+        this.produits = data.data
+      }
+    } catch (e) {
+      console.error('Erreur chargement produits:', e)
+    }
+  },
+  computed: {
+    totalGeneral() {
+      return this.produits.reduce((total, produit) => {
+        return total + (produit.prix * produit.quantite)
+      }, 0)
+    }
+  },
+  methods: {
+    modifier(produit) {
+      console.log('Modifier:', produit)
+    },
+    async supprimer(numProduit) {
+      if (!confirm('Confirmer la suppression ?')) return
+      try {
+        const response = await fetch('http://localhost/backend/crud.php', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ numProduit })
+        })
+        const data = await response.json()
+        if (data.success) {
+          this.produits = this.produits.filter(p => p.numProduit !== numProduit)
+          alert('Produit supprimé !')
+        }
+      } catch (e) {
+        alert('Erreur lors de la suppression')
+      }
+    }
+>>>>>>> Stashed changes
   }
 }
 
@@ -192,6 +252,7 @@ async function supprimer(numProduit) {
 onMounted(fetchProduits)
 </script>
 
+<<<<<<< Updated upstream
 <style>
 .crud-container { width: 100%; }
 table { width: 100%; border-collapse: collapse; }
@@ -207,4 +268,45 @@ th { background-color: #2c3e50; color: white; }
 .field input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
 .error { color: red; font-size: 12px; }
 .success { color: green; }
+=======
+<style scoped>
+.crud-container {
+  width: 100%;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+th {
+  background-color: #1B3162;
+  color: white;
+}
+.montant {
+  color: #1B3162;
+  font-weight: bold;
+}
+.btn-modifier {
+  padding: 5px 10px;
+  margin: 2px;
+  background-color: #1B3162;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.btn-supprimer {
+  padding: 5px 10px;
+  margin: 2px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+>>>>>>> Stashed changes
 </style>
