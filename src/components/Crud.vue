@@ -20,25 +20,15 @@
         </tr>
       </thead>
       <tbody>
-<<<<<<< Updated upstream
-        <tr v-for="produit in produits" :key="produit.numProduit">
-          <td>{{ produit.numProduit }}</td>
-=======
         <tr v-for="(produit, index) in produits" :key="produit.numProduit">
           <td>{{ index + 1 }}</td>
->>>>>>> Stashed changes
           <td>{{ produit.design }}</td>
           <td>{{ produit.prix }}</td>
           <td>{{ produit.quantite }}</td>
           <td>{{ produit.montant }}</td>
           <td>
-<<<<<<< Updated upstream
-            <button class="btn-edit" @click="openEdit(produit)">Modifier</button>
-            <button class="btn-delete" @click="supprimer(produit.numProduit)">Supprimer</button>
-=======
             <button class="btn-modifier" @click="modifier(produit)">⚙️</button>
             <button class="btn-supprimer" @click="supprimer(produit.numProduit)">🗑️</button>
->>>>>>> Stashed changes
           </td>
         </tr>
       </tbody>
@@ -75,33 +65,6 @@
   </div>
 </template>
 
-<<<<<<< Updated upstream
-<script setup>
-import { ref, reactive, onMounted } from 'vue'
-
-const API_URL = 'http://localhost/backend/crud.php'
-
-// Data
-const produits = ref([])
-const editingProduit = ref(null)
-const isLoading = ref(false)
-const serverMessage = ref('')
-const serverSuccess = ref(false)
-
-// Edit form validation errors
-const editErrors = reactive({
-  design: '',
-  prix: '',
-  quantite: ''
-})
-
-// Validate design field
-function validateDesign() {
-  if (!editingProduit.value.design.trim()) {
-    editErrors.design = "Le design est obligatoire"
-  } else {
-    editErrors.design = ''
-=======
 <script>
 export default {
   name: 'Crud',
@@ -149,7 +112,6 @@ export default {
         alert('Erreur lors de la suppression')
       }
     }
->>>>>>> Stashed changes
   }
 }
 
@@ -252,23 +214,6 @@ async function supprimer(numProduit) {
 onMounted(fetchProduits)
 </script>
 
-<<<<<<< Updated upstream
-<style>
-.crud-container { width: 100%; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-th { background-color: #2c3e50; color: white; }
-.btn-edit { padding: 5px 10px; margin: 2px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; }
-.btn-delete { padding: 5px 10px; margin: 2px; background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; }
-.btn-save { padding: 8px 16px; background: #42b883; color: white; border: none; border-radius: 3px; cursor: pointer; margin-right: 8px; }
-.btn-cancel { padding: 8px 16px; background: #95a5a6; color: white; border: none; border-radius: 3px; cursor: pointer; }
-.edit-form { margin-top: 20px; padding: 16px; border: 1px solid #ccc; border-radius: 5px; }
-.field { margin-bottom: 10px; }
-.field label { display: block; margin-bottom: 4px; }
-.field input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-.error { color: red; font-size: 12px; }
-.success { color: green; }
-=======
 <style scoped>
 .crud-container {
   width: 100%;
@@ -308,5 +253,4 @@ th {
   border-radius: 3px;
   cursor: pointer;
 }
->>>>>>> Stashed changes
 </style>
