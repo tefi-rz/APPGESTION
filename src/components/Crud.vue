@@ -25,10 +25,10 @@
           <td>{{ produit.design }}</td>
           <td>{{ produit.prix }}</td>
           <td>{{ produit.quantite }}</td>
-          <td>{{ produit.montant }}</td>
+          <td class="montant">{{ produit.montant }}</td>
           <td>
-            <button class="btn-modifier" @click="modifier(produit)">⚙️</button>
-            <button class="btn-supprimer" @click="supprimer(produit.numProduit)">🗑️</button>
+            <button class="btn-modifier" @click="openEdit(produit)">⚙️</button>
+            <button class="btn-supprimer" @click="askDelete(produit)">🗑️</button>
           </td>
         </tr>
       </tbody>
@@ -56,34 +56,60 @@
         <span class="error" v-if="editErrors.quantite">{{ editErrors.quantite }}</span>
       </div>
 
-      <button class="btn-save" @click="modifier" :disabled="isLoading">
+      <button class="btn-save" @click="enregistrerModification" :disabled="isLoading">
         {{ isLoading ? 'Enregistrement...' : 'Enregistrer' }}
       </button>
       <button class="btn-cancel" @click="cancelEdit">Annuler</button>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div class="modal-overlay" v-if="produitToDelete">
+      <div class="modal-box">
+        <h3>Confirmer la suppression</h3>
+        <p>
+          Voulez-vous vraiment supprimer
+          <strong>{{ produitToDelete.design }}</strong> ?
+        </p>
+        <p class="modal-warning">Cette action est irréversible.</p>
+        <div class="modal-actions">
+          <button class="btn-confirm-delete" @click="confirmDelete" :disabled="isDeleting">
+            {{ isDeleting ? 'Suppression...' : 'Oui, supprimer' }}
+          </button>
+          <button class="btn-cancel" @click="produitToDelete = null">Annuler</button>
+        </div>
+      </div>
     </div>
 
   </div>
 </template>
 
 <script>
+const API_URL = 'http://localhost/backend/crud.php'
+
 export default {
   name: 'Crud',
+
   data() {
     return {
-      produits: []
-    }
-  },
-  async mounted() {
-    try {
-      const response = await fetch('http://localhost/backend/crud.php')
-      const data = await response.json()
-      if (data.success) {
-        this.produits = data.data
+      produits: [],
+      editingProduit: null,
+      produitToDelete: null,
+      isLoading: false,
+      isDeleting: false,
+      serverMessage: '',
+      serverSuccess: false,
+      editErrors: {
+        design: '',
+        prix: '',
+        quantite: ''
       }
-    } catch (e) {
-      console.error('Erreur chargement produits:', e)
     }
   },
+
+  async mounted() {
+    await this.fetchProduits()
+  },
+
   computed: {
     totalGeneral() {
       return this.produits.reduce((total, produit) => {
@@ -91,127 +117,117 @@ export default {
       }, 0)
     }
   },
+
   methods: {
-    modifier(produit) {
-      console.log('Modifier:', produit)
-    },
-    async supprimer(numProduit) {
-      if (!confirm('Confirmer la suppression ?')) return
+    async fetchProduits() {
       try {
-        const response = await fetch('http://localhost/backend/crud.php', {
+        const response = await fetch(API_URL)
+        const data = await response.json()
+        if (data.success) {
+          this.produits = data.data
+        }
+      } catch (e) {
+        this.serverSuccess = false
+        this.serverMessage = 'Impossible de contacter le serveur'
+      }
+    },
+
+    validateDesign() {
+      if (!this.editingProduit.design.trim()) {
+        this.editErrors.design = "Le design est obligatoire"
+      } else {
+        this.editErrors.design = ''
+      }
+    },
+
+    validatePrix() {
+      if (!this.editingProduit.prix || this.editingProduit.prix <= 0) {
+        this.editErrors.prix = "Le prix doit être supérieur à 0"
+      } else {
+        this.editErrors.prix = ''
+      }
+    },
+
+    validateQuantite() {
+      if (!this.editingProduit.quantite || this.editingProduit.quantite <= 0) {
+        this.editErrors.quantite = "La quantité doit être supérieure à 0"
+      } else {
+        this.editErrors.quantite = ''
+      }
+    },
+
+    openEdit(produit) {
+      this.editingProduit = { ...produit }
+      this.serverMessage = ''
+      this.editErrors = { design: '', prix: '', quantite: '' }
+    },
+
+    cancelEdit() {
+      this.editingProduit = null
+      this.editErrors = { design: '', prix: '', quantite: '' }
+    },
+
+    async enregistrerModification() {
+      this.validateDesign()
+      this.validatePrix()
+      this.validateQuantite()
+
+      if (this.editErrors.design || this.editErrors.prix || this.editErrors.quantite) return
+
+      this.isLoading = true
+      try {
+        const response = await fetch(API_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.editingProduit)
+        })
+        const data = await response.json()
+        this.serverSuccess = data.success
+        this.serverMessage = data.message
+        if (data.success) {
+          this.cancelEdit()
+          await this.fetchProduits()
+        }
+      } catch (e) {
+        this.serverSuccess = false
+        this.serverMessage = 'Impossible de contacter le serveur'
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // Open delete confirmation modal
+    askDelete(produit) {
+      this.produitToDelete = produit
+      this.serverMessage = ''
+    },
+
+    // Confirm and perform deletion
+    async confirmDelete() {
+      const numProduit = this.produitToDelete.numProduit
+      this.isDeleting = true
+      try {
+        const response = await fetch(API_URL, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ numProduit })
         })
         const data = await response.json()
+        this.serverSuccess = data.success
+        this.serverMessage = data.message
         if (data.success) {
           this.produits = this.produits.filter(p => p.numProduit !== numProduit)
-          alert('Produit supprimé !')
         }
       } catch (e) {
-        alert('Erreur lors de la suppression')
+        this.serverSuccess = false
+        this.serverMessage = 'Impossible de contacter le serveur'
+      } finally {
+        this.isDeleting = false
+        this.produitToDelete = null
       }
     }
   }
 }
-
-// Validate prix field
-function validatePrix() {
-  if (!editingProduit.value.prix || editingProduit.value.prix <= 0) {
-    editErrors.prix = "Le prix doit être supérieur à 0"
-  } else {
-    editErrors.prix = ''
-  }
-}
-
-// Validate quantite field
-function validateQuantite() {
-  if (!editingProduit.value.quantite || editingProduit.value.quantite <= 0) {
-    editErrors.quantite = "La quantité doit être supérieure à 0"
-  } else {
-    editErrors.quantite = ''
-  }
-}
-
-// Fetch all products on mount
-async function fetchProduits() {
-  try {
-    const response = await fetch(API_URL)
-    const data = await response.json()
-    if (data.success) {
-      produits.value = data.data
-    }
-  } catch (e) {
-    serverMessage.value = 'Impossible de contacter le serveur'
-    serverSuccess.value = false
-  }
-}
-
-// Open edit form with selected product
-function openEdit(produit) {
-  editingProduit.value = { ...produit }
-  serverMessage.value = ''
-}
-
-// Cancel editing
-function cancelEdit() {
-  editingProduit.value = null
-  editErrors.design = ''
-  editErrors.prix = ''
-  editErrors.quantite = ''
-}
-
-// Update product
-async function modifier() {
-  validateDesign()
-  validatePrix()
-  validateQuantite()
-
-  if (editErrors.design || editErrors.prix || editErrors.quantite) return
-
-  isLoading.value = true
-  try {
-    const response = await fetch(API_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editingProduit.value)
-    })
-    const data = await response.json()
-    serverSuccess.value = data.success
-    serverMessage.value = data.message
-    if (data.success) {
-      cancelEdit()
-      fetchProduits()
-    }
-  } catch (e) {
-    serverSuccess.value = false
-    serverMessage.value = 'Impossible de contacter le serveur'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// Delete product
-async function supprimer(numProduit) {
-  if (!confirm('Confirmer la suppression ?')) return
-  try {
-    const response = await fetch(API_URL, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ numProduit })
-    })
-    const data = await response.json()
-    serverSuccess.value = data.success
-    serverMessage.value = data.message
-    if (data.success) fetchProduits()
-  } catch (e) {
-    serverSuccess.value = false
-    serverMessage.value = 'Impossible de contacter le serveur'
-  }
-}
-
-// Load products when component mounts
-onMounted(fetchProduits)
 </script>
 
 <style scoped>
@@ -252,5 +268,111 @@ th {
   border: none;
   border-radius: 3px;
   cursor: pointer;
+}
+.edit-form {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #1B3162;
+  border-radius: 8px;
+}
+.field {
+  margin-bottom: 10px;
+}
+.field label {
+  display: block;
+  margin-bottom: 4px;
+  color: #1B3162;
+  font-weight: bold;
+}
+.field input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.btn-save {
+  padding: 8px 16px;
+  background: #42b883;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+.btn-cancel {
+  padding: 8px 16px;
+  background: #95a5a6;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.error {
+  color: red;
+  font-size: 12px;
+  display: block;
+  margin-top: 4px;
+}
+.success {
+  color: green;
+}
+
+/* Delete confirmation modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(27, 49, 98, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-box {
+  background: white;
+  border: 2px solid #1B3162;
+  border-radius: 15px;
+  padding: 24px 28px;
+  width: 320px;
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+.modal-box h3 {
+  color: #1B3162;
+  margin-bottom: 12px;
+}
+.modal-box p {
+  color: #333;
+  margin-bottom: 8px;
+}
+.modal-warning {
+  font-size: 12px;
+  color: #e74c3c;
+  margin-bottom: 16px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.btn-confirm-delete {
+  padding: 8px 16px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+.btn-confirm-delete:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+.btn-confirm-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
